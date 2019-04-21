@@ -3,9 +3,16 @@
  * Author: Justin Rokisky (GK81776)
  * OpenMP Bucket Sort
  *
+ * To Build:
+ * 	gcc -o parallel-bucket-sort parallel-bucket-sort.c -fopenmp
+ *
  * Overview:
- * To avoid interference between threads and to reduce memory waste, each
- * thread gets its own linked list per bucket.
+ * 	Bucket sort using OpenMP.
+ *
+ * Design:
+ * 	* To avoid interference between threads and to reduce memory waste,
+ * 	  each thread, the data structure used is a linked list for each
+ *	  bucket for each thread.
  * 
  *****************************************************************************/
 
@@ -111,14 +118,18 @@ void insertion_sort(int *arr, int size)
 }
 
 int main (int argc, char *argv[]) {
+
+	if (argc != 3) {
+		printf("Usage: parallel-bucket-sort NUM_THREADS NUM_KEYS\n");
+		return 1;
+	}
+
+	int _num_threads = atoi(argv[1]);
+	int _num_keys = atoi(argv[2]);
+	double start = omp_get_wtime();
 	// Max value of data interval.
 	int _interval_max = 100;		//INT_MAX;
-	// Number of elements.
-	int _num_keys = 2924;
-	// TODO: this should be configurable as input.
-	int _num_threads = 5;
 	int _num_buckets = _num_threads;
-
 	int i, j, tid, data_start_idx, data_end_idx;
 	int data_chunk_size, bucket_range, bucket_idx, bucket_size;
 
@@ -129,11 +140,11 @@ int main (int argc, char *argv[]) {
 	for (i = 0; i < _num_keys; i++) {
 		data[i] = random() % _interval_max;
 	}
-	output(data, _num_keys);
-	printf("\n");
+	// output(data, _num_keys);
+	// printf("\n");
 
-	// Each thread gets its own collection of Buckets so we don't
-	// have to worry about writes interfering.
+	// Each thread gets its own collection of Buckets to avoid slowdowns
+	// due to locking.
 	Bucket *all_buckets = malloc(_num_threads * _num_buckets * sizeof(Bucket));
 	int **results = malloc(_num_buckets * sizeof(int *));
 	int *results_bucket_sizes = malloc(_num_buckets * sizeof(int));
@@ -146,7 +157,9 @@ int main (int argc, char *argv[]) {
 		}
 	}
 
+	// The size of data that each thread is responsible for bucket-ing.
 	data_chunk_size = _num_keys / _num_threads;
+	// The range of each bucket.
 	bucket_range = _interval_max / _num_buckets;
 
 	#pragma omp parallel private(tid, i, j, data_start_idx, data_end_idx, bucket_idx, bucket_size) num_threads(_num_threads)
@@ -170,30 +183,42 @@ int main (int argc, char *argv[]) {
 			append_bucket(&all_buckets[tid * _num_threads + bucket_idx], data[i]);
 		}
 
+		// Wait here to ensure that all threads have bucket-ed all the data 
+		// they're responsible for.
 		#pragma omp barrier
 
-		// Each thread is responsible for the bucket that matches its tid. Loop through each
-		// threads local version of that bucket and concatenate them all together.
+		// Each thread is responsible for sorting the bucket that matches its tid. 
+		// Loop through each threads local version of that bucket and concatenate 
+		// its data with the rest.
 		bucket_size = 0;
 		for (i = 0; i < _num_threads; i++) {
 			bucket_size += size(&all_buckets[i * _num_threads + tid]);
 		}
+
+		// Allocate space for the sorted result.
 		results[tid] = malloc(bucket_size * sizeof(int));
 		results_bucket_sizes[tid] = bucket_size;
+
+		// Copy each threads' bucket data into an array for sorting.
 		int j = 0;
 		for (i = 0; i < _num_threads; i++) {
 			copy(results[tid], &all_buckets[i * _num_threads + tid], &j);
 		}
+		
+		// Sort the bucket data.
 		insertion_sort(results[tid], bucket_size);
 	}
 
+	double end = omp_get_wtime() - start;
+
 	// Print Results.
 	for (i = 0; i < _num_buckets; i++) {
-		output(results[i], results_bucket_sizes[i]);
+		//output(results[i], results_bucket_sizes[i]);
 	}
-	printf("\n");
+	//printf("\n");
+	printf("================================================================");
+	printf("%f seconds taken using %d threads to sort %d ints\n", end, _num_threads, _num_keys);
 
 	return 0;
 }
-
 
