@@ -222,7 +222,6 @@ int main (int argc, char *argv[]) {
 			output(results[i], results_bucket_sizes[i]);
 		}
 	}
-	printf("\n");
 	printf("%f seconds taken using %d threads to sort %d ints\n", end, _num_threads, _num_keys);
 
 	return 0;
