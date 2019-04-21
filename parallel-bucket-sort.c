@@ -101,21 +101,10 @@ void copy(int *array_bucket, Bucket *bucket, int *curr_idx)
 	}
 }
 
-// Insertion sort.
-void insertion_sort(int *arr, int size)
-{
-	int i, j, val;
-	for (i = 1; i < size; i++) {
-		val = arr[i];
-		j = i - 1;
-
-		while (j >= 0 && arr[j] > val) {
-			arr[j+1] = arr[j];
-			j = j - 1;
-		}
-		arr[j+1] = val;
-	}
+int compare (const void * a, const void * b) {
+   return ( *(int*)a - *(int*)b );
 }
+
 
 int main (int argc, char *argv[]) {
 
@@ -211,7 +200,7 @@ int main (int argc, char *argv[]) {
 		}
 		
 		// Sort the bucket data.
-		insertion_sort(results[tid], bucket_size);
+		qsort(results[tid], bucket_size, sizeof(int), compare);
 	}
 
 	double end = omp_get_wtime() - start;
