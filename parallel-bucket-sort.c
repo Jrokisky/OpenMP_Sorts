@@ -6,13 +6,17 @@
  * To Build:
  * 	gcc -o parallel-bucket-sort parallel-bucket-sort.c -fopenmp
  *
+ * To Run:
+ * 	parallel-bucket-sort NUM_THREADS NUM_KEYS DISPLAY_OUTPUT[1|0]
+ *
  * Overview:
  * 	Bucket sort using OpenMP.
  *
  * Design:
  * 	* To avoid interference between threads and to reduce memory waste,
- * 	  each thread, the data structure used is a linked list for each
- *	  bucket for each thread.
+ * 	  the data structure used is a linked list for each bucket for each 
+ * 	  thread.
+ * 	* Each Bucket stores its size and tail for fast appending.
  * 
  *****************************************************************************/
 
@@ -31,20 +35,27 @@ void output (int *array, int n) {
 }
 
 // Linked list.
-typedef struct Bucket
+typedef struct LinkedList
 {
 	int value;
-	struct Bucket *next;
+	struct LinkedList *next;
+} LinkedList;
+
+typedef struct Bucket
+{
+	int count;
+	struct LinkedList *head;
+	struct LinkedList *tail;
 } Bucket;
 
 // Print the values in a bucket.
 void print_bucket(const Bucket *bucket) 
 {
-	if (bucket->value == -1) {
+	if (bucket->head == NULL) {
 		return;
 	}
-	printf(" %d ->", bucket->value);
-	Bucket *iterator = bucket->next;
+	printf(" %d ->", bucket->head->value);
+	LinkedList *iterator = bucket->head->next;
 	while (iterator != NULL) {
 		printf(" %d ->", iterator->value);
 		iterator = iterator->next;
@@ -55,46 +66,34 @@ void print_bucket(const Bucket *bucket)
 // Append an element to the end of a bucket.
 void append_bucket(Bucket *bucket, int value)
 {
-	if (bucket->value == -1) {
-		bucket->value = value;
-		return;
-	}
-
-	Bucket *iterator = bucket;
-	while (iterator->next != NULL) {
-		iterator = iterator->next;
-	}
-
-	Bucket *new_val = malloc(sizeof(Bucket));
+	LinkedList *new_val = malloc(sizeof(LinkedList));
 	new_val->value = value;
 	new_val->next = NULL;
-	iterator->next = new_val;
-}
 
-int size(Bucket *bucket) 
-{	
-	if (bucket->value == -1) {
-		return 0;
-	}
-
-	int count = 1;
-	Bucket *iterator = bucket;
-	while (iterator->next != NULL) {
-		iterator = iterator->next;
-		count++;
-	}
-	return count;
-}
-
-void copy(int *array_bucket, Bucket *bucket, int *curr_idx)
-{
-	if (bucket->value == -1) {
+	// Base Case.
+	if (bucket->head == NULL) {
+		bucket->head = new_val;
+		bucket->tail = new_val;
+		bucket->count = 1;
 		return;
 	}
-	array_bucket[*curr_idx] = bucket->value;
+
+	LinkedList *tail = bucket->tail;
+	tail->next = new_val;
+	bucket->tail = new_val;
+	(bucket->count)++;
+}
+
+// Copy the given bucket into the given array starting at the given index.
+void copy(int *array_bucket, Bucket *bucket, int *curr_idx)
+{
+	if (bucket->head == NULL) {
+		return;
+	}
+	array_bucket[*curr_idx] = bucket->head->value;
 	(*curr_idx)++;
 
-	Bucket *iterator = bucket;
+	LinkedList *iterator = bucket->head;
 	while (iterator->next != NULL) {
 		iterator = iterator->next;
 		array_bucket[*curr_idx] = iterator->value;
@@ -102,6 +101,7 @@ void copy(int *array_bucket, Bucket *bucket, int *curr_idx)
 	}
 }
 
+// Insertion sort.
 void insertion_sort(int *arr, int size)
 {
 	int i, j, val;
@@ -119,16 +119,18 @@ void insertion_sort(int *arr, int size)
 
 int main (int argc, char *argv[]) {
 
-	if (argc != 3) {
-		printf("Usage: parallel-bucket-sort NUM_THREADS NUM_KEYS\n");
+	if (argc != 4) {
+		printf("Usage: parallel-bucket-sort NUM_THREADS NUM_KEYS OUTPUT\n");
 		return 1;
 	}
 
 	int _num_threads = atoi(argv[1]);
 	int _num_keys = atoi(argv[2]);
+	int _output = atoi(argv[3]);
+
 	double start = omp_get_wtime();
 	// Max value of data interval.
-	int _interval_max = 100;		//INT_MAX;
+	int _interval_max = INT_MAX;
 	int _num_buckets = _num_threads;
 	int i, j, tid, data_start_idx, data_end_idx;
 	int data_chunk_size, bucket_range, bucket_idx, bucket_size;
@@ -140,8 +142,10 @@ int main (int argc, char *argv[]) {
 	for (i = 0; i < _num_keys; i++) {
 		data[i] = random() % _interval_max;
 	}
-	// output(data, _num_keys);
-	// printf("\n");
+	if (_output == 1) {
+		output(data, _num_keys);
+		printf("\n");
+	}
 
 	// Each thread gets its own collection of Buckets to avoid slowdowns
 	// due to locking.
@@ -152,8 +156,9 @@ int main (int argc, char *argv[]) {
 	// Init struct values.
 	for (i = 0; i < _num_threads; i++) {
 		for (j = 0; j < _num_buckets; j++) {
-			all_buckets[i * _num_buckets + j].value = -1;
-			all_buckets[i * _num_buckets + j].next = NULL;
+			all_buckets[i * _num_buckets + j].count = 0;
+			all_buckets[i * _num_buckets + j].head = NULL;
+			all_buckets[i * _num_buckets + j].tail = NULL;
 		}
 	}
 
@@ -192,7 +197,7 @@ int main (int argc, char *argv[]) {
 		// its data with the rest.
 		bucket_size = 0;
 		for (i = 0; i < _num_threads; i++) {
-			bucket_size += size(&all_buckets[i * _num_threads + tid]);
+			bucket_size += all_buckets[i * _num_threads + tid].count;
 		}
 
 		// Allocate space for the sorted result.
@@ -213,10 +218,11 @@ int main (int argc, char *argv[]) {
 
 	// Print Results.
 	for (i = 0; i < _num_buckets; i++) {
-		//output(results[i], results_bucket_sizes[i]);
+		if (_output == 1) {
+			output(results[i], results_bucket_sizes[i]);
+		}
 	}
-	//printf("\n");
-	printf("================================================================");
+	printf("\n");
 	printf("%f seconds taken using %d threads to sort %d ints\n", end, _num_threads, _num_keys);
 
 	return 0;
