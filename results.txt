@@ -1,0 +1,102 @@
+./parallel-bucket-sort
+2.410622 seconds | 1 threads | 10000000 keys
+2.359068 seconds | 1 threads | 10000000 keys
+
+1.543032 seconds | 2 threads | 10000000 keys
+1.518330 seconds | 2 threads | 10000000 keys
+
+0.983597 seconds | 4 threads | 10000000 keys
+0.990072 seconds | 4 threads | 10000000 keys
+
+0.819758 seconds | 8 threads | 10000000 keys
+0.817900 seconds | 8 threads | 10000000 keys
+
+0.969062 seconds | 16 threads | 10000000 keys
+0.963529 seconds | 16 threads | 10000000 keys
+
+------------------------------------------------------
+25.894529 seconds | 1 threads | 100000000 keys
+25.846904 seconds | 1 threads | 100000000 keys
+
+16.345900 seconds | 2 threads | 100000000 keys
+17.089829 seconds | 2 threads | 100000000 keys
+
+11.510282 seconds | 4 threads | 100000000 keys
+11.448491 seconds | 4 threads | 100000000 keys
+
+9.649719 seconds | 8 threads | 100000000 keys
+9.956430 seconds | 8 threads | 100000000 keys
+
+11.114389 seconds | 16 threads | 100000000 keys
+11.319962 seconds | 16 threads | 100000000 keys
+
+------------------------------------------------------
+53.940320 seconds | 1 threads | 200000000 keys
+53.698519 seconds | 1 threads | 200000000 keys
+
+34.715969 seconds | 2 threads | 200000000 keys
+35.764061 seconds | 2 threads | 200000000 keys
+
+23.679899 seconds | 4 threads | 200000000 keys
+23.247518 seconds | 4 threads | 200000000 keys
+
+20.324982 seconds | 8 threads | 200000000 keys
+19.760053 seconds | 8 threads | 200000000 keys
+
+23.280905 seconds | 16 threads | 200000000 keys
+23.180983 seconds | 16 threads | 200000000 keys
+
+------------------------------------------------------
+=================================================================
+
+./parallel-sample-sort
+4.181665 seconds | 1 threads | 10000000 keys
+4.182416 seconds | 1 threads | 10000000 keys
+
+3.353481 seconds | 2 threads | 10000000 keys
+3.319478 seconds | 2 threads | 10000000 keys
+
+1.684711 seconds | 4 threads | 10000000 keys
+1.664359 seconds | 4 threads | 10000000 keys
+
+1.245893 seconds | 8 threads | 10000000 keys
+1.388415 seconds | 8 threads | 10000000 keys
+
+1.536876 seconds | 16 threads | 10000000 keys
+1.512583 seconds | 16 threads | 10000000 keys
+
+------------------------------------------------------
+46.898569 seconds | 1 threads | 100000000 keys
+46.851930 seconds | 1 threads | 100000000 keys
+
+37.541247 seconds | 2 threads | 100000000 keys
+37.342133 seconds | 2 threads | 100000000 keys
+
+19.422966 seconds | 4 threads | 100000000 keys
+20.378923 seconds | 4 threads | 100000000 keys
+
+15.187719 seconds | 8 threads | 100000000 keys
+15.183832 seconds | 8 threads | 100000000 keys
+
+16.970411 seconds | 16 threads | 100000000 keys
+17.048684 seconds | 16 threads | 100000000 keys
+
+------------------------------------------------------
+96.557120 seconds | 1 threads | 200000000 keys
+96.670793 seconds | 1 threads | 200000000 keys
+
+77.960639 seconds | 2 threads | 200000000 keys
+77.550745 seconds | 2 threads | 200000000 keys
+
+40.686184 seconds | 4 threads | 200000000 keys
+41.662274 seconds | 4 threads | 200000000 keys
+
+31.145867 seconds | 8 threads | 200000000 keys
+31.617431 seconds | 8 threads | 200000000 keys
+
+34.754920 seconds | 16 threads | 200000000 keys
+37.080086 seconds | 16 threads | 200000000 keys
+
+------------------------------------------------------
+=================================================================
+

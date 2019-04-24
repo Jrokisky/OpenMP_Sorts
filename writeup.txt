@@ -1,0 +1,8 @@
+SPRING 2019 CMSC 691
+Homework 3
+Author: Justin Rokisky
+
+I found that my implementation of Bucket Sort performed better than my implementation of Sample Sort. I think this was the case because I used rand() to generate data, so my data was somewhat uniform to begin with. Since this uniformity existed in the data, the added sort steps needed in Sample sort resulted in less performance gains than they took to run. It was also interesting to note that 8 threads was the fastest performing. I think this was the case because I was doing my testing on an 8-core machine.
+
+The data from various results of running my programs are in the results.txt file. To compile and generate data, you can run: bash test.sh
+
